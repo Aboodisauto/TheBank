@@ -5,7 +5,7 @@
 #include <string>
 using namespace std;
 string FileName = "MyFile.txt";
-enum eProcesses{Show = 1,Add = 2,Delete = 3,UpdateInfo = 4,FindClient = 5,Exit = 6};
+enum eProcesses{Show = 1,Add = 2,Delete = 3,UpdateInfo = 4,FindClient = 5,Transaction = 6,Exit = 7};
 struct stClientInfo{
     string AccountNumber,Name,Pin,Age,PhoneNumber;
     int AccountBalance;
@@ -90,7 +90,8 @@ void PrintScreen(){
     cout << setw(10) << "[3]Delete Client." << endl;
     cout << setw(10) << "[4]Update Client." << endl;
     cout << setw(10) << "[5]Find Client." << endl;
-    cout << setw(10) << "[6]Exit." << endl;
+    cout << setw(10) << "[6]Transaction." << endl;
+    cout << setw(10) << "[7]Exit." << endl;
     cout << "===========================================" << endl;
 }
 void PrintClientInfo(stClientInfo Client){
@@ -110,10 +111,31 @@ void ShowClientList(vector<stClientInfo> Clients){
         Counter++;
     }
 }
+bool ClientExists(string AccountNumber,string FileName){
+    fstream File;
+    File.open(FileName,ios::in);
+    if(File.is_open()){
+        stClientInfo Client;
+        string sa;
+        while(getline(File,sa)){
+            Client = DecryptDataLine(sa);
+            if(Client.AccountNumber == AccountNumber){
+                File.close();
+                return true;
+            }
+        }
+        File.close();
+    }
+    return false;
+}
 stClientInfo FillInfo(){
     stClientInfo Info;
     cout << "Please Enter Your Account Number: " << endl;
     getline(cin >> ws,Info.AccountNumber);
+    while(ClientExists(Info.AccountNumber,FileName)){
+        cout << "The Account Number you entered already exists" << endl;
+        getline(cin >> ws, Info.AccountNumber);
+    }
     cout << "Please Enter Your Name: " << endl;
     getline(cin,Info.Name);
     cout << "Please Enter Your Pin: " << endl;
@@ -180,11 +202,25 @@ void UpdateClient(vector<stClientInfo>&Clients , string AccountNumber){
     }
     FillFileWithData(FileName,Clients);
 }
+void TransactionMode(vector<stClientInfo> &Clients,string AccountSender, string AccountReciver){
+    short Amount;
+    cout << "How Much Amount Do you Need to send: " << endl;
+    cin >> Amount;
+    for(stClientInfo &Client:Clients){
+        if(Client.AccountNumber == AccountSender){
+            Client.AccountBalance = Client.AccountBalance - Amount;
+        }
+        if(Client.AccountNumber == AccountReciver){
+            Client.AccountBalance = Client.AccountBalance + Amount;
+        }
+    }
+    FillFileWithData(FileName,Clients);
+}
 eProcesses ChooseMode()
 {   
     int Number;
     PrintScreen();
-    cout << "Choose The Operation From [1-6]. " << endl;
+    cout << "Choose The Operation From [1-7]. " << endl;
     cin >> Number;
     
     return (eProcesses)Number;
@@ -194,21 +230,38 @@ void StartProcess(){
     vector<stClientInfo> Clients = ReadData(FileName);
     stClientInfo ClientInfo;
     do{
+        system("cls");
         Mode = ChooseMode();
         switch (Mode)
         {
+        case eProcesses::Transaction:
+        {
+            system("cls");
+            string AccountSender = Readstring("Enter your account number: ");
+            string AccountReciver = Readstring("Enter the account number you want to send the money: ");
+            TransactionMode(Clients,AccountSender,AccountReciver);
+            system("pause");
+            break;
+        }
         case eProcesses::Show:
+            system("cls");
             ShowClientList(Clients);
+            system("pause");
             break;
         case eProcesses::Add:
         {
+            system("cls");
             char Confirm = ReadCharacter("Are you sure you want to add an account ? ");
-            ClientInfo = FillInfo();
-            AddClient(ClientInfo,Clients);
+            if(Confirm == 'Y' || Confirm == 'y'){
+                ClientInfo = FillInfo();
+                AddClient(ClientInfo,Clients);
+            }
+            system("pause");
             break;
         }
         case eProcesses::FindClient:
         {
+            system("cls");
             string AccountNumber = Readstring("Enter The Account Number: ");
             if(FindUser(Clients,AccountNumber)){
                 break;
@@ -216,9 +269,12 @@ void StartProcess(){
                 cout << "We Couldn't find the user with the AccountNumber" << endl;
                 break;
             }
+            system("pause");
+            break;
         }
         case eProcesses::Delete:
         {
+            system("cls");
             string AccountNumber = Readstring("Enter The Account Number: ") ;
                 if(FindUser(Clients,AccountNumber)){
                     char Confirm = ReadCharacter("Are you Sure you want to delete this client ? ");
@@ -231,10 +287,12 @@ void StartProcess(){
                 }else{
                     cout << "We couldn't find a client with that account number" << endl;
                 }
+                system("pause");
             break;
         }
         case eProcesses::UpdateInfo:
         {
+            system("cls");
             string AccountNumber = Readstring("Enter The Account Number: ");
             if(FindUser(Clients,AccountNumber)){
                 char Confirm = ReadCharacter("Are you Sure you want to update this client ? ");
@@ -245,12 +303,15 @@ void StartProcess(){
             }else{
                 cout << "We couldn't find a client with that account number" << endl;
             }
+            system("pause");
         }
         
     }
 }while( Mode != eProcesses::Exit);}
 /// @brief 
 /// @return 
+
 int main(){
     StartProcess();
+    return 0;
 }
