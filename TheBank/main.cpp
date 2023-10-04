@@ -245,7 +245,9 @@ void WithDraws(vector<stClientInfo> &Clients,string AccountNumber){
     Clients = ReadData(FileName);
 }
 void PrintBalances(vector<stClientInfo> Clients){
-    cout << setw(25) << left << "Name" << setw(25) << left << "AccountBalance " << endl;
+    cout << "=========================================================================================" << endl;
+    cout << setw(25) << left << "|" << "Name" << "|" << setw(25) << left << "|" << "AccountBalance " << "|" << endl;
+    cout << "=========================================================================================" << endl;
     for(stClientInfo &Client: Clients){
         cout << setw(25) << left << Client.Name << setw(25 ) << left << Client.AccountBalance << endl;
     }
@@ -342,10 +344,8 @@ void StartProcess(){
             system("cls");
             string AccountNumber = Readstring("Enter The Account Number: ");
             if(FindUser(Clients,AccountNumber)){
-                break;
             }else{
                 cout << "We Couldn't find the user with the AccountNumber" << endl;
-                break;
             }
             system("pause");
             break;
