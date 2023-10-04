@@ -6,6 +6,7 @@
 using namespace std;
 string FileName = "MyFile.txt";
 enum eProcesses{Show = 1,Add = 2,Delete = 3,UpdateInfo = 4,FindClient = 5,Transaction = 6,Exit = 7};
+enum eTransactions{Deposit = 1,WithDraw = 2,Balance = 3,MainMenu = 4};
 struct stClientInfo{
     string AccountNumber,Name,Pin,Age,PhoneNumber;
     int AccountBalance;
@@ -93,6 +94,15 @@ void PrintScreen(){
     cout << setw(10) << "[6]Transaction." << endl;
     cout << setw(10) << "[7]Exit." << endl;
     cout << "===========================================" << endl;
+}
+void PrintTransactionMenu(){
+    cout << "===========================================" << endl;
+    cout << "               Transactions                 " << endl;
+    cout << "===========================================" << endl;
+    cout << setw(10) << left <<"[1]Depoist." << endl;
+    cout << setw(10) << left << "[2]WithDraw." << endl;
+    cout << setw(10) << left << "[3]Balances." << endl; 
+    cout << setw(10) << left << "[4]Main Menu." << endl;
 }
 void PrintClientInfo(stClientInfo Client){
     cout << setw(16) << std::left << "Account Number: " << Client.AccountNumber << endl;
@@ -202,19 +212,43 @@ void UpdateClient(vector<stClientInfo>&Clients , string AccountNumber){
     }
     FillFileWithData(FileName,Clients);
 }
-void TransactionMode(vector<stClientInfo> &Clients,string AccountSender, string AccountReciver){
-    short Amount;
-    cout << "How Much Amount Do you Need to send: " << endl;
+void Deposits(vector<stClientInfo> &Clients,string AccountNumber){
+    short Amount ;
+    char Confirmation;
+    cout << "Enter the deposit amount: " << endl;
     cin >> Amount;
     for(stClientInfo &Client:Clients){
-        if(Client.AccountNumber == AccountSender){
-            Client.AccountBalance = Client.AccountBalance - Amount;
-        }
-        if(Client.AccountNumber == AccountReciver){
-            Client.AccountBalance = Client.AccountBalance + Amount;
+        if(Client.AccountNumber == AccountNumber){
+            Confirmation = ReadCharacter("Are you sure you want to depoist ? ");
+            if(Confirmation == 'y' || Confirmation == 'Y'){
+                Client.AccountBalance += Amount;
+            }
         }
     }
     FillFileWithData(FileName,Clients);
+    Clients = ReadData(FileName);
+}
+void WithDraws(vector<stClientInfo> &Clients,string AccountNumber){
+    short Amount ;
+    char Confirmation;
+    cout << "Enter the WithDrawel amount: " << endl;
+    cin >> Amount;
+    for(stClientInfo &Client:Clients){
+        if(Client.AccountNumber == AccountNumber){
+            Confirmation = ReadCharacter("Are you sure to you want to withdraw ? ");
+            if(Confirmation == 'y' || Confirmation == 'Y'){
+                Client.AccountBalance = Client.AccountBalance - Amount;
+            }
+        }
+    }
+    FillFileWithData(FileName,Clients);
+    Clients = ReadData(FileName);
+}
+void PrintBalances(vector<stClientInfo> Clients){
+    cout << setw(25) << left << "Name" << setw(25) << left << "AccountBalance " << endl;
+    for(stClientInfo &Client: Clients){
+        cout << setw(25) << left << Client.Name << setw(25 ) << left << Client.AccountBalance << endl;
+    }
 }
 eProcesses ChooseMode()
 {   
@@ -224,6 +258,12 @@ eProcesses ChooseMode()
     cin >> Number;
     
     return (eProcesses)Number;
+}
+eTransactions ChooseTransactionMode(){
+    short Choice;
+    cout << "Choose Between [1-4]: " << endl;
+    cin >> Choice;
+    return (eTransactions)Choice;
 }
 void StartProcess(){
     eProcesses Mode;
@@ -237,10 +277,48 @@ void StartProcess(){
         case eProcesses::Transaction:
         {
             system("cls");
-            string AccountSender = Readstring("Enter your account number: ");
-            string AccountReciver = Readstring("Enter the account number you want to send the money: ");
-            TransactionMode(Clients,AccountSender,AccountReciver);
-            system("pause");
+            PrintTransactionMenu();
+            eTransactions TransMode = ChooseTransactionMode();
+            switch(TransMode){
+                case eTransactions::Deposit:
+                {
+                    system("cls");
+                    string AccountNumber = Readstring("Enter your account number: ");
+                    if(FindUser(Clients,AccountNumber)){
+                        Deposits(Clients,AccountNumber);
+                    }else{
+                        cout << "We couldn't find an account with that number.. ";
+                        system("pause");
+                    }
+                    system("pause");
+                    break;
+                }
+                case eTransactions::WithDraw:
+                {
+                    system("cls");
+                    string AccountNumber = Readstring("Enter your account number: ");
+                    if(FindUser(Clients,AccountNumber)){
+                        WithDraws(Clients,AccountNumber);
+                    }else{
+                        cout << "We couldn't find an account with number.. " << endl;
+                        system("pause");
+                    }
+                    system("pause");
+                    break;
+                }
+                case eTransactions::Balance:
+                {
+                    system("cls");
+                    PrintBalances(Clients);
+                    system("pause");
+                    break;
+                }
+                case eTransactions::MainMenu:
+                {
+                    system("cls");
+                    break;
+                }
+            }
             break;
         }
         case eProcesses::Show:
